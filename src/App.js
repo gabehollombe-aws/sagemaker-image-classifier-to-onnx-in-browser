@@ -241,7 +241,7 @@ class App extends Component {
       images: [],
       onnxModel: null,
       classLabels: 'BACKGROUND_Google Faces Faces_easy Leopards Motorbikes accordion airplanes anchor ant barrel bass beaver binocular bonsai brain brontosaurus buddha butterfly camera cannon car_side ceiling_fan cellphone chair chandelier cougar_body cougar_face crab crayfish crocodile crocodile_head cup dalmatian dollar_bill dolphin dragonfly electric_guitar elephant emu euphonium ewer ferry flamingo flamingo_head garfield gerenuk gramophone grand_piano hawksbill headphone hedgehog helicopter ibis inline_skate joshua_tree kangaroo ketch lamp laptop llama lobster lotus mandolin mayfly menorah metronome minaret nautilus octopus okapi pagoda panda pigeon pizza platypus pyramid revolver rhino rooster saxophone schooner scissors scorpion sea_horse snoopy soccer_ball stapler starfish stegosaurus stop_sign strawberry sunflower tick trilobite umbrella watch water_lilly wheelchair wild_cat windsor_chair wrench yin_yang',
-      loadingModel: false,
+      addImageFromUrl: '',
     }
     this.fileInputRef = React.createRef()
     this.classifier = null
@@ -276,6 +276,14 @@ class App extends Component {
   handleClearImages = () => {
     this.setState({
       images: []
+    })
+  }
+
+  addImageFromUrl = () => {
+    debugger
+    this.classify(this.state.addImageFromUrl)
+    this.setState({
+      addImageFromUrl: ''
     })
   }
 
@@ -316,6 +324,20 @@ class App extends Component {
 
         <Form.Group widths='equal'>
           <WebcamCapture onCapture={this.classify}/>
+        </Form.Group>
+
+        <Form.Group widths='equal'>
+          <Form.Input 
+            label='Image from URL' 
+            placeholder='http://path/to/some/image.jpg' 
+            name='addImageFromUrl' 
+            onChange={this.handleChange} 
+            value={this.state.addImageFromUrl} 
+            action={{
+              content: 'Classify Image From URL',
+              onClick: () => this.addImageFromUrl()
+            }}
+            />
         </Form.Group>
       </Form>
 
