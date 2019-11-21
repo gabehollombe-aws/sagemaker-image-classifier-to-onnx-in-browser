@@ -6,6 +6,7 @@ import Webcam from 'react-webcam';
 import classNames from 'classnames'
 import Dropzone from 'react-dropzone'
 import { Tensor, InferenceSession } from 'onnxjs'
+import { v4 as uuid } from 'uuid'
 
 const IMAGE_WIDTH = 224;
 const IMAGE_HEIGHT = 224;
@@ -132,7 +133,7 @@ class ClassifiedImage extends Component {
     if (!this.state.allLabelsScores) return [];
 
     const labelsAndScores = this.state.allLabelsScores.map(([label, score]) => 
-      <p>{label}: {score}</p>
+      <p key={uuid()}>{label}: {score}</p>
     )
     return [{
       key: 'labels-and-scores',
