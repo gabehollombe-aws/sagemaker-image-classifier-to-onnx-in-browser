@@ -74,39 +74,39 @@ function scaleImage(url, width, height, callback){
 }
 
 
-class WebcamCapture extends React.Component {
-  setRef = webcam => {
-    this.webcam = webcam;
+const WebcamCapture = (props) => {
+  const webcamRef = React.useRef(null); 
+
+  const capture = React.useCallback(
+    () => {
+      const imageSrc = webcamRef.current.getScreenshot();
+      props.onCapture(imageSrc)
+    },
+    [webcamRef]
+  );
+
+  const videoConstraints = {
+    width: IMAGE_WIDTH,
+    height: IMAGE_HEIGHT,
+    facingMode: "user"
   };
 
-  handleCapture=() => {
-    this.props.onCapture(this.webcam.getScreenshot())
-  }
-
-  render() {
-    const videoConstraints = {
-      width: IMAGE_WIDTH,
-      height: IMAGE_HEIGHT,
-      facingMode: "user"
-    };
-
-    return (
+  return (
+    <div>
       <div>
-        <div>
-          <Webcam
-            audio={false}
-            height={IMAGE_HEIGHT}
-            width={IMAGE_WIDTH}
-            ref={this.setRef}
-            screenshotFormat="image/jpeg"
-            videoConstraints={videoConstraints}
-          />
-        </div>
-
-        <Form.Button onClick={this.handleCapture}>Classify</Form.Button>
+        <Webcam
+          audio={false}
+          height={IMAGE_HEIGHT}
+          width={IMAGE_WIDTH}
+          ref={webcamRef}
+          screenshotFormat="image/jpeg"
+          videoConstraints={videoConstraints}
+        />
       </div>
-    );
-  }
+
+      <Form.Button onClick={capture}>Classify</Form.Button>
+    </div>
+  );
 }
 
 class ClassifiedImage extends Component {
@@ -119,7 +119,7 @@ class ClassifiedImage extends Component {
   }
 
   async componentDidMount() {
-    const { classLabels, predictions, highestProbabilityIndex } = await this.props.classifier.classify(this.props.imageData);
+    const { classLabels, predictions, highestProbabilityIndex } = await this.props.classifier.classify(this.props.imageDataUrl);
     let sortedClassLabels = classLabels.splice(0)
     sortedClassLabels.sort()
     this.setState({ 
@@ -173,8 +173,11 @@ class Classifier {
     this.imageHeight = imageHeight
     this.classLabels = classLabels
     this.modelData = modelData
-   
     this.onnxSession = new InferenceSession()
+    this.canvas = document.createElement('canvas')
+    this.canvas.width = IMAGE_WIDTH
+    this.canvas.height = IMAGE_HEIGHT
+    this.ctx = this.canvas.getContext('2d')
   }
 
   loadModel = async () => {
@@ -199,7 +202,21 @@ class Classifier {
     return dataProcessed.data;
   }
 
-  async classify(imageData) {
+  getImageData = (src) => {
+    return new Promise((resolve, reject) => {
+      const img = new window.Image()
+      img.onload = () => {
+        this.ctx.drawImage(img, 0, 0)
+        img.style.display = 'none'
+        resolve(this.ctx.getImageData(0, 0, IMAGE_WIDTH, IMAGE_HEIGHT))
+      }
+      img.onerror = reject
+      img.src = src
+    })
+  }
+
+  async classify(imageSrc) {
+    const imageData = await this.getImageData(imageSrc)
     const preprocessedData = this.realignImageDataForInference(imageData.data, this.imageWidth, this.imageHeight)
     const inputTensor = new Tensor(preprocessedData, 'float32', [1, 3, IMAGE_WIDTH, IMAGE_HEIGHT]);
     const outputMap = await this.onnxSession.run([inputTensor]);
@@ -223,26 +240,26 @@ class App extends Component {
     this.state = {
       images: [],
       onnxModel: null,
-      classLabels: '',
+      classLabels: 'BACKGROUND_Google Faces Faces_easy Leopards Motorbikes accordion airplanes anchor ant barrel bass beaver binocular bonsai brain brontosaurus buddha butterfly camera cannon car_side ceiling_fan cellphone chair chandelier cougar_body cougar_face crab crayfish crocodile crocodile_head cup dalmatian dollar_bill dolphin dragonfly electric_guitar elephant emu euphonium ewer ferry flamingo flamingo_head garfield gerenuk gramophone grand_piano hawksbill headphone hedgehog helicopter ibis inline_skate joshua_tree kangaroo ketch lamp laptop llama lobster lotus mandolin mayfly menorah metronome minaret nautilus octopus okapi pagoda panda pigeon pizza platypus pyramid revolver rhino rooster saxophone schooner scissors scorpion sea_horse snoopy soccer_ball stapler starfish stegosaurus stop_sign strawberry sunflower tick trilobite umbrella watch water_lilly wheelchair wild_cat windsor_chair wrench yin_yang',
       loadingModel: false,
     }
     this.fileInputRef = React.createRef()
     this.classifier = null
   }
 
-  classify = async (imageDataUrl, imageData) => {
+  classify = async (imageDataUrl) => {
     this.state.classifier.setLabels(this.state.classLabels)
     this.setState({
-      images: [...this.state.images, { imageDataUrl, imageData }]
+      images: [...this.state.images, { imageDataUrl}]
     })
   };
 
   handleChange = (e) => this.setState({ [e.target.name]: e.target.value })
 
   classifyScaled = (canvas) => {
-    const imageData = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height)
+    // const imageData = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height)
     const imageDataUrl = canvas.toDataURL()
-    this.classify(imageDataUrl, imageData)
+    this.classify(imageDataUrl)
   }
 
   onDrop = (acceptedFiles, rejectedFiles) => {
@@ -324,7 +341,7 @@ class App extends Component {
       <Button onClick={this.handleClearImages}>Clear Images</Button>
 
       <CardGroup>
-        { this.state.images.map(({imageDataUrl, imageData}, index) => <ClassifiedImage key={"img"+index} imageDataUrl={imageDataUrl} imageData={imageData} classifier={this.state.classifier} />) }
+        { this.state.images.map(({imageDataUrl, imageData}, index) => <ClassifiedImage key={"img"+index} imageDataUrl={imageDataUrl} classifier={this.state.classifier} />) }
       </CardGroup>
       </div>
     );
