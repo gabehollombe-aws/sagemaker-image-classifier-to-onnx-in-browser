@@ -1,0 +1,21 @@
+{
+  "name": "webcam-sagemaker-image-classification",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "classnames": "^2.2.6",
+    "onnxjs": "^0.1.7",
+    "react": "^16.5.2",
+    "react-dom": "^16.5.2",
+    "react-dropzone": "^10.2.0",
+    "react-scripts": "1.1.5",
+    "react-webcam": "^4.0.0",
+    "semantic-ui-react": "^0.82.5"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test --env=jsdom",
+    "eject": "react-scripts eject"
+  }
+}
