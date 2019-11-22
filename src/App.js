@@ -93,7 +93,12 @@ const WebcamCapture = (props) => {
 
   return (
     <div>
-      <Header as='h3'>Classify via Webcam</Header>
+      <Divider horizontal>
+        <Header as='h3'>
+          <Icon name='video camera' />
+          Classify via Webcam
+        </Header>
+      </Divider>
       <div>
         <Webcam
           audio={false}
@@ -241,7 +246,8 @@ class App extends Component {
     this.state = {
       images: [],
       onnxModel: null,
-      classLabels: 'BACKGROUND_Google Faces Faces_easy Leopards Motorbikes accordion airplanes anchor ant barrel bass beaver binocular bonsai brain brontosaurus buddha butterfly camera cannon car_side ceiling_fan cellphone chair chandelier cougar_body cougar_face crab crayfish crocodile crocodile_head cup dalmatian dollar_bill dolphin dragonfly electric_guitar elephant emu euphonium ewer ferry flamingo flamingo_head garfield gerenuk gramophone grand_piano hawksbill headphone hedgehog helicopter ibis inline_skate joshua_tree kangaroo ketch lamp laptop llama lobster lotus mandolin mayfly menorah metronome minaret nautilus octopus okapi pagoda panda pigeon pizza platypus pyramid revolver rhino rooster saxophone schooner scissors scorpion sea_horse snoopy soccer_ball stapler starfish stegosaurus stop_sign strawberry sunflower tick trilobite umbrella watch water_lilly wheelchair wild_cat windsor_chair wrench yin_yang',
+      classLabels: '',
+      // classLabels: 'BACKGROUND_Google Faces Faces_easy Leopards Motorbikes accordion airplanes anchor ant barrel bass beaver binocular bonsai brain brontosaurus buddha butterfly camera cannon car_side ceiling_fan cellphone chair chandelier cougar_body cougar_face crab crayfish crocodile crocodile_head cup dalmatian dollar_bill dolphin dragonfly electric_guitar elephant emu euphonium ewer ferry flamingo flamingo_head garfield gerenuk gramophone grand_piano hawksbill headphone hedgehog helicopter ibis inline_skate joshua_tree kangaroo ketch lamp laptop llama lobster lotus mandolin mayfly menorah metronome minaret nautilus octopus okapi pagoda panda pigeon pizza platypus pyramid revolver rhino rooster saxophone schooner scissors scorpion sea_horse snoopy soccer_ball stapler starfish stegosaurus stop_sign strawberry sunflower tick trilobite umbrella watch water_lilly wheelchair wild_cat windsor_chair wrench yin_yang',
       addImageFromUrl: '',
       selectedModelFileName: '',
     }
@@ -327,21 +333,27 @@ class App extends Component {
           </Form.Group>
 
           <Form.Group widths='equal'>
-            <Form.Input label='Class Labels' placeholder='space delimited list of labels' name='classLabels' onChange={this.handleChange} value={this.state.classLabels} />
+            <Form.Input label='Class Labels' placeholder='Paste a space delimited list of your class labels here' name='classLabels' onChange={this.handleChange} value={this.state.classLabels} />
           </Form.Group>
         </Form>
       </Segment>
 
+      { 
+        this.state.selectedModelFileName && this.state.classLabels &&
       <Segment>
         <Header as='h2'>2. Add Some Images</Header>
+          <WebcamCapture onCapture={this.classify}/>
+
+          <Divider section horizontal>
+          <Header as='h3'>
+            <Icon name='globe' />
+            Classify via Image URLS
+          </Header>
+        </Divider>
+
         <Form>
           <Form.Group widths='equal'>
-            <WebcamCapture onCapture={this.classify}/>
-          </Form.Group>
-
-          <Header as='h3'>Classify via Image URLs</Header>
-          <Form.Group widths='equal'>
-            <Form.Input 
+              <Form.Input 
               placeholder='http://path/to/some/image.jpg' 
               name='addImageFromUrl' 
               onChange={this.handleChange} 
@@ -360,35 +372,44 @@ class App extends Component {
           </Form.Group>
         </Form>
 
-        <Header as='h3'>Classify via image files</Header>
+        <Divider section horizontal>
+          <Header as='h3'>
+            <Icon name='file image' />
+            Classify via image files
+          </Header>
+        </Divider>
+
         <Dropzone onDrop={this.onDrop} accept={['image/jpg', 'image/jpeg', 'image/png']}>
           {({getRootProps, getInputProps, isDragActive}) => {
             return (
-              <div 
+              <Segment secondary
                 {...getRootProps()}
                 style={styles.dropZone}
                 className={classNames('dropzone', {'dropzone--isActive': isDragActive})}
               >
                 <input {...getInputProps()} />
-                {
-                  isDragActive ?
-                    <p>Drop files here...</p> :
-                    <p>You can drag and drop images here or click to select images to upload.</p>
-                }
-              </div>
+                <Header as='h4'>Drag and drop images here or click to select images to classify.</Header>
+                <Icon name='images outline' size='massive' />
+              </Segment>
             )
           }}
         </Dropzone>
       </Segment>
+      }
 
-      <Segment>
+      { this.state.images.length > 0 &&
+        <Segment>
         <Header as='h2'>3. View Results</Header>
-        <Button onClick={this.handleClearImages}>Clear Images</Button>
+
+        <Segment basic>
+          <Button onClick={this.handleClearImages}>Clear Images</Button>
+        </Segment>
 
         <CardGroup>
           { this.state.images.map(({imageDataUrl, imageData}, index) => <ClassifiedImage key={"img"+index} imageDataUrl={imageDataUrl} classifier={this.state.classifier} />) }
         </CardGroup>
       </Segment>
+      }
 
     </Container>
     );
