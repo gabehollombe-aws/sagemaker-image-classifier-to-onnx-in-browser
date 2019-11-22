@@ -1,7 +1,7 @@
 /* global ndarray */
 
 import React, { Component } from 'react';
-import { Accordion, Button, Card, CardGroup, Form, Icon, Image, Label } from 'semantic-ui-react'
+import { Accordion, Button, Card, CardGroup, Container, Divider, Form, Header, Icon, Image, Label, Segment } from 'semantic-ui-react'
 import Webcam from 'react-webcam';
 import classNames from 'classnames'
 import Dropzone from 'react-dropzone'
@@ -93,6 +93,7 @@ const WebcamCapture = (props) => {
 
   return (
     <div>
+      <Header as='h3'>Classify via Webcam</Header>
       <div>
         <Webcam
           audio={false}
@@ -104,7 +105,7 @@ const WebcamCapture = (props) => {
         />
       </div>
 
-      <Form.Button onClick={capture}>Classify</Form.Button>
+      <Form.Button onClick={capture}>Classify Webcam Image</Form.Button>
     </div>
   );
 }
@@ -302,77 +303,94 @@ class App extends Component {
 
   render() {
     return (
-      <div>
-      <Form onSubmit={(e)=>e.preventDefault()}>
-        <Form.Group widths='equal'>
+      <Container>
 
-          <Button
-            content={ this.state.selectedModelFileName == '' ? 'Click to select ONNX Model File' : this.state.selectedModelFileName }
-            labelPosition="left"
-            icon="file"
-            onClick={() => this.fileInputRef.current.click()}
-          />
+      <Segment>
+        <Header as='h2'>1. Configure Your Model</Header>
 
-          <input
-            ref={this.fileInputRef}
-            type="file"
-            hidden
-            onChange={this.handleModelChanged}
-          />
-
-          <Form.Input label='Class Labels' placeholder='space delimited list of labels' name='classLabels' onChange={this.handleChange} value={this.state.classLabels} />
-        </Form.Group>
-
-        <Form.Group widths='equal'>
-          <WebcamCapture onCapture={this.classify}/>
-        </Form.Group>
-
-        <Form.Group widths='equal'>
-          <Form.Input 
-            label='Image from URL' 
-            placeholder='http://path/to/some/image.jpg' 
-            name='addImageFromUrl' 
-            onChange={this.handleChange} 
-            value={this.state.addImageFromUrl} 
-            action={{
-              content: 'Classify Image From URL',
-              onClick: () => this.addImageFromUrl()
-            }}
-            onKeyDown={(e) => {
-              if (e.keyCode == 13) {
-                e.preventDefault()
-                this.addImageFromUrl()
-              }
-            }}
+        <Form onSubmit={(e)=>e.preventDefault()}>
+          <Form.Group widths='equal'>
+            <Button
+              content={ this.state.selectedModelFileName == '' ? 'Click to select ONNX Model File' : this.state.selectedModelFileName }
+              labelPosition="left"
+              icon="file"
+              onClick={() => this.fileInputRef.current.click()}
             />
-        </Form.Group>
-      </Form>
 
-      <Dropzone onDrop={this.onDrop} accept={['image/jpg', 'image/jpeg', 'image/png']}>
-        {({getRootProps, getInputProps, isDragActive}) => {
-          return (
-            <div 
-              {...getRootProps()}
-              style={styles.dropZone}
-              className={classNames('dropzone', {'dropzone--isActive': isDragActive})}
-            >
-              <input {...getInputProps()} />
-              {
-                isDragActive ?
-                  <p>Drop files here...</p> :
-                  <p>You can drag and drop images here or click to select images to upload.</p>
-              }
-            </div>
-          )
-        }}
-      </Dropzone>
+            <input
+              ref={this.fileInputRef}
+              type="file"
+              hidden
+              onChange={this.handleModelChanged}
+            />
 
-      <Button onClick={this.handleClearImages}>Clear Images</Button>
+          </Form.Group>
 
-      <CardGroup>
-        { this.state.images.map(({imageDataUrl, imageData}, index) => <ClassifiedImage key={"img"+index} imageDataUrl={imageDataUrl} classifier={this.state.classifier} />) }
-      </CardGroup>
-      </div>
+          <Form.Group widths='equal'>
+            <Form.Input label='Class Labels' placeholder='space delimited list of labels' name='classLabels' onChange={this.handleChange} value={this.state.classLabels} />
+          </Form.Group>
+        </Form>
+      </Segment>
+
+      <Segment>
+        <Header as='h2'>2. Add Some Images</Header>
+        <Form>
+          <Form.Group widths='equal'>
+            <WebcamCapture onCapture={this.classify}/>
+          </Form.Group>
+
+          <Header as='h3'>Classify via Image URLs</Header>
+          <Form.Group widths='equal'>
+            <Form.Input 
+              placeholder='http://path/to/some/image.jpg' 
+              name='addImageFromUrl' 
+              onChange={this.handleChange} 
+              value={this.state.addImageFromUrl} 
+              action={{
+                content: 'Classify Image From URL',
+                onClick: () => this.addImageFromUrl()
+              }}
+              onKeyDown={(e) => {
+                if (e.keyCode == 13) {
+                  e.preventDefault()
+                  this.addImageFromUrl()
+                }
+              }}
+              />
+          </Form.Group>
+        </Form>
+
+        <Header as='h3'>Classify via image files</Header>
+        <Dropzone onDrop={this.onDrop} accept={['image/jpg', 'image/jpeg', 'image/png']}>
+          {({getRootProps, getInputProps, isDragActive}) => {
+            return (
+              <div 
+                {...getRootProps()}
+                style={styles.dropZone}
+                className={classNames('dropzone', {'dropzone--isActive': isDragActive})}
+              >
+                <input {...getInputProps()} />
+                {
+                  isDragActive ?
+                    <p>Drop files here...</p> :
+                    <p>You can drag and drop images here or click to select images to upload.</p>
+                }
+              </div>
+            )
+          }}
+        </Dropzone>
+      </Segment>
+
+      <Segment>
+        <Header as='h2'>3. View Results</Header>
+        <Button onClick={this.handleClearImages}>Clear Images</Button>
+
+        <CardGroup>
+          { this.state.images.map(({imageDataUrl, imageData}, index) => <ClassifiedImage key={"img"+index} imageDataUrl={imageDataUrl} classifier={this.state.classifier} />) }
+        </CardGroup>
+      </Segment>
+
+    </Container>
     );
   }
 }
