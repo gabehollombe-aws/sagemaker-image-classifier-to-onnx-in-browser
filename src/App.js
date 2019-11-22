@@ -250,6 +250,7 @@ class App extends Component {
       addImageFromUrl: '',
       selectedModelFileName: '',
       loadingModel: false,
+      modelLoadError: '',
     }
     this.fileInputRef = React.createRef()
     this.classifier = null
@@ -294,8 +295,17 @@ class App extends Component {
 
   updateClassifier = async (modelData) => {
     const classifier = new Classifier(modelData, this.state.classLabels, IMAGE_WIDTH, IMAGE_HEIGHT)
-    await classifier.loadModel()
-    this.setState({ classifier })
+
+    try {
+      this.setState({ modelLoadError: '' })
+      await classifier.loadModel()
+      this.setState({ classifier })
+    }
+    catch(ex) {
+      console.error(ex)
+      this.setState({ modelLoadError: ex.message })
+    }
+
   }
 
   handleModelChanged = async (e) => {
@@ -344,6 +354,14 @@ class App extends Component {
               hidden
               onChange={this.handleModelChanged}
             />
+
+            { this.state.modelLoadError &&
+              <Label as='h3' color='red'>
+                <Icon name='exclamation triangle' size='large'/>
+                Error loading model: { this.state.modelLoadError } <br/> <br/> Are you sure the selected file is an ONNX formatted model?
+              </Label>
+            }
+
           </Form.Group>
 
 
