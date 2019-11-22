@@ -1,7 +1,7 @@
 /* global ndarray */
 
 import React, { Component } from 'react';
-import { Accordion, Button, Card, CardGroup, Container, Divider, Form, Header, Icon, Image, Label, Segment } from 'semantic-ui-react'
+import { Accordion, Button, Card, CardGroup, Container, Dimmer, Divider, Form, Header, Icon, Image, Label, Loader, Segment } from 'semantic-ui-react'
 import Webcam from 'react-webcam';
 import classNames from 'classnames'
 import Dropzone from 'react-dropzone'
@@ -187,7 +187,6 @@ class Classifier {
   }
 
   loadModel = async () => {
-    console.log('loading ', this.modelData)
     await this.onnxSession.loadModel(this.modelData)
   }
 
@@ -250,6 +249,7 @@ class App extends Component {
       // classLabels: 'BACKGROUND_Google Faces Faces_easy Leopards Motorbikes accordion airplanes anchor ant barrel bass beaver binocular bonsai brain brontosaurus buddha butterfly camera cannon car_side ceiling_fan cellphone chair chandelier cougar_body cougar_face crab crayfish crocodile crocodile_head cup dalmatian dollar_bill dolphin dragonfly electric_guitar elephant emu euphonium ewer ferry flamingo flamingo_head garfield gerenuk gramophone grand_piano hawksbill headphone hedgehog helicopter ibis inline_skate joshua_tree kangaroo ketch lamp laptop llama lobster lotus mandolin mayfly menorah metronome minaret nautilus octopus okapi pagoda panda pigeon pizza platypus pyramid revolver rhino rooster saxophone schooner scissors scorpion sea_horse snoopy soccer_ball stapler starfish stegosaurus stop_sign strawberry sunflower tick trilobite umbrella watch water_lilly wheelchair wild_cat windsor_chair wrench yin_yang',
       addImageFromUrl: '',
       selectedModelFileName: '',
+      loadingModel: false,
     }
     this.fileInputRef = React.createRef()
     this.classifier = null
@@ -296,31 +296,46 @@ class App extends Component {
     const classifier = new Classifier(modelData, this.state.classLabels, IMAGE_WIDTH, IMAGE_HEIGHT)
     await classifier.loadModel()
     this.setState({ classifier })
-    console.log('Classifier updated.')
   }
 
   handleModelChanged = async (e) => {
     const file = e.target.files[0]
     this.setState({
-      selectedModelFileName: file.name
+      selectedModelFileName: file.name,
+      loadingModel: true,
     })
+
     await this.updateClassifier(file)
+    this.setState({ loadingModel: false })
   }
 
   render() {
     return (
       <Container>
 
+      <Header as='h1'>Custom image classification at the edge, in your web browser!</Header>
+
+      <p>
+        This page makes it easy to try out a custome image classifer trained via Amazon SageMaker and exported as ONNX format.
+      </p>
+
+      <p>
+        For an example Jupyter notebook that shows you how to train your own custom image classifier model with Amazon Sagemker, see <br/>
+        <a hreef="https://github.com/gabehollombe-aws/sagemaker-image-classifier-to-onnx-in-browser/blob/master/sagemaker/train_and_export_as_onnx.ipynb">https://github.com/gabehollombe-aws/sagemaker-image-classifier-to-onnx-in-browser/blob/master/sagemaker/train_and_export_as_onnx.ipynb</a>
+      </p>
+
       <Segment>
-        <Header as='h2'>1. Configure Your Model</Header>
+        <Header as='h2'>1. Specify your model and class labels</Header>
 
         <Form onSubmit={(e)=>e.preventDefault()}>
           <Form.Group widths='equal'>
             <Button
-              content={ this.state.selectedModelFileName == '' ? 'Click to select ONNX Model File' : this.state.selectedModelFileName }
+              content={ this.state.selectedModelFileName == '' ? 'Click to select your ONNX model file from your computer' : this.state.selectedModelFileName }
               labelPosition="left"
               icon="file"
               onClick={() => this.fileInputRef.current.click()}
+              color={ this.state.selectedModelFileName ? null : 'red' }
+              loading={this.state.loadingModel}
             />
 
             <input
@@ -329,11 +344,17 @@ class App extends Component {
               hidden
               onChange={this.handleModelChanged}
             />
-
           </Form.Group>
 
+
           <Form.Group widths='equal'>
-            <Form.Input label='Class Labels' placeholder='Paste a space delimited list of your class labels here' name='classLabels' onChange={this.handleChange} value={this.state.classLabels} />
+            <Form.Field>
+
+             <Form.Input label='Class Labels' placeholder='Paste a space delimited list of your class labels here' name='classLabels' onChange={this.handleChange} value={this.state.classLabels} />
+            { this.state.classLabels.length == 0 &&
+              <Label pointing color='red'>You must enter a space-delimited list of class labels that your model will score on. For exampe: 'dog cat human'</Label>
+            }
+            </Form.Field>
           </Form.Group>
         </Form>
       </Segment>
@@ -341,7 +362,7 @@ class App extends Component {
       { 
         this.state.selectedModelFileName && this.state.classLabels &&
       <Segment>
-        <Header as='h2'>2. Add Some Images</Header>
+        <Header as='h2'>2. Add some images</Header>
           <WebcamCapture onCapture={this.classify}/>
 
           <Divider section horizontal>
@@ -399,7 +420,7 @@ class App extends Component {
 
       { this.state.images.length > 0 &&
         <Segment>
-        <Header as='h2'>3. View Results</Header>
+        <Header as='h2'>3. View the results</Header>
 
         <Segment basic>
           <Button onClick={this.handleClearImages}>Clear Images</Button>
