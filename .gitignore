@@ -20,6 +20,6 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-.amplifyrc
-amplify
-src/aws-exports.js
+
+/ignore
+*.onnx
