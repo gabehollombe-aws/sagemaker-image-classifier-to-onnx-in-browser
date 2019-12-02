@@ -105,7 +105,7 @@ class App extends Component {
 
       <p>
         For an example Jupyter notebook that shows you how to train your own custom image classifier model with Amazon Sagemker, see <br/>
-        <a hreef="https://github.com/gabehollombe-aws/sagemaker-image-classifier-to-onnx-in-browser/blob/master/sagemaker/train_and_export_as_onnx.ipynb">https://github.com/gabehollombe-aws/sagemaker-image-classifier-to-onnx-in-browser/blob/master/sagemaker/train_and_export_as_onnx.ipynb</a>
+        <a href="https://github.com/gabehollombe-aws/sagemaker-image-classifier-to-onnx-in-browser/blob/master/sagemaker/train_and_export_as_onnx.ipynb">https://github.com/gabehollombe-aws/sagemaker-image-classifier-to-onnx-in-browser/blob/master/sagemaker/train_and_export_as_onnx.ipynb</a>
       </p>
 
       <Segment>
